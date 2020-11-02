@@ -7,6 +7,10 @@ venv/
 .vscode
 .vscode/
 
+settings.json
+/settings.json
+*json
+
 __pycache__/
 *.py[cod]
 

@@ -6,6 +6,8 @@ from twilio.rest import Client
 import logging
 load_dotenv()
 
+logging.basicConfig(level=logging.INFO)
+
 ACCOUNT_SID = os.getenv('ACCOUNT_SID')
 AUTH_TOKEN = os.getenv('AUTH_TOKEN')
 NUMBER_TO = os.getenv('NUMBER_TO')
@@ -26,10 +28,13 @@ def get_status(user_id):
     url = URL_API_VK + method
     try:
         status = requests.post(url, params=params)
-        user_info = status.json()['response']
-        return user_info[0]['online']
-    except Exception as error:
-        logging.exception('Exception occurred')
+        try:
+            user_info = status.json()['response']
+            return user_info[0]['online']
+        except Exception as err:
+            logging.error(err, exc_info=True)
+    except Exception as err:
+        logging.error(err, exc_info=True)
 
 
 def sms_sender(sms_text):
@@ -43,11 +48,9 @@ def sms_sender(sms_text):
 if __name__ == '__main__':
     vk_id = input('Введите id ')
     while True:
-        if get_status(vk_id) == 0:
-            logging.error(f'{vk_id} сейчас оффлайн!')
-        elif get_status(vk_id) == 1:
+        if get_status(vk_id) == 1:
             sms_sender(f'{vk_id} сейчас онлайн!')
             break
         else:
-            logging.error('"get_status" function raised an error!')
+            logging.info(f'{vk_id} сейчас оффлайн!')
         time.sleep(5)

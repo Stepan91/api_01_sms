@@ -33,8 +33,10 @@ def get_status(user_id):
     try:
         user_info = status.json()['response']
         return user_info[0]['online']
-    except (requests.RequestException, ValueError):
-        logging.error(ValueError, exc_info=True)
+    except KeyError as wrong_key: 
+        logging.error(wrong_key, exc_info=True)
+    except IndexError as index_err:
+        logging.error(index_err, exc_info=True)
     
 
 def sms_sender(sms_text):

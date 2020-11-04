@@ -27,14 +27,32 @@ def get_status(user_id):
     method = 'users.get'
     url = URL_API_VK + method
     try:
-        status = requests.post(url, params=params)
+        status = requests.post(url, params=params, timeout=(0.1, 10))
+        user_info = status.json()['response']
+        return user_info[0]['online']
+    except requests.exceptions.ConnectTimeout as errTimeout:
+        print('Ошибка ожидания связи с сервером!')
+        logging.error(errTimeout, exc_info=True)
+        #здесь все-таки сделал вложенный, 
+        #чтобы проверить тайм-аут при первой неудачной итерации
         try:
-            user_info = status.json()['response']
-            return user_info[0]['online']
-        except Exception as err:
-            logging.error(err, exc_info=True)
+            status = requests.post(url, params=params, timeout=(10, 0.1))
+        except requests.exceptions.ReadTimeout as errReadTimeOut:
+            print('Ошибка ожидания времени для чтения!')
+            raise SystemExit(errReadTimeOut)
+        except requests.exceptions.ConnectTimeout:
+            print('Ошибка ожидания связи с сервером. Опять!')
+            raise SystemExit(errTimeout)
+    except requests.exceptions.ConnectionError as errConnect:
+        print('Похоже на ошибку соединения...')
+        logging.error(errConnect, exc_info=True)
+        raise SystemExit(errConnect)
+    except KeyError as wrong_key:
+        logging.error(wrong_key, exc_info=True)
+        raise SystemExit(wrong_key)
     except Exception as err:
         logging.error(err, exc_info=True)
+        raise SystemExit(err)
 
 
 def sms_sender(sms_text):
@@ -51,6 +69,8 @@ if __name__ == '__main__':
         if get_status(vk_id) == 1:
             sms_sender(f'{vk_id} сейчас онлайн!')
             break
-        else:
-            logging.info(f'{vk_id} сейчас оффлайн!')
+        # нужно ли здесь указывать про проблемы с сервером,
+        # если выше я выловил все возможные ошибки, залоггировал их,
+        # и вышел из системы?
+        logging.info(f'{vk_id} сейчас оффлайн или у ВК проблемы с сервером')
         time.sleep(5)

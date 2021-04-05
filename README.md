@@ -1,2 +1,3 @@
 # api_01_sms
-API 01 sms
+
+Is a script that notifies the user "online" status via an SMS message. VK API and Twilio API involved.
